@@ -1,103 +1,251 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState, useEffect } from "react";
+import "./styles.css";
+import { fetchForms, fetchCompanies, fetchSearchResults, allowedPageSizePerBatch } from "./apiService";
+import {useConfig} from './useConfig'
+import PaginatedTable from "./PaginatedTable";
+
+
+const AppWrapper = () =>{
+  const { config, isLoading,isError } = useConfig();
+  if (isLoading) {
+  return <div className="launch-div blinking">Loading configs ...</div>; 
+  }
+  if(isError)
+    return <div className="launch-div">Error loading configs !</div>; 
+  else if(!isError && !isLoading) return <App />
+}
+
+const App = () => {
+  const [companies, setCompanies] = useState([]);
+  const [intialSearchPressed, setIntialSearchPressed] = useState(false);
+  const [selectedCompanies, setSelectedCompanies] = useState<any>([]);
+  const [selectedForm, setSelectedForm] = useState("");
+  const [results, setResults] = useState([]);
+  const [apiError, setApiError] = useState<any>("");
+  const [searchInput, setSearchInput] = useState("");
+  const [fetchingTable, setFetchingTable] = useState(false);
+  const [forms, setForms] = useState([]);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [resetPagination, setResetPagination] = useState(false);
+  const [pagedInfo, setPagedInfo] = useState({
+    pageSize: allowedPageSizePerBatch,
+    pageNumber: 0,
+    loadMoreResults: false,
+  });
+
+  useEffect(() => {
+    const getForms = async () => {
+      try {
+        const formsData = await fetchForms();
+        setForms(formsData);
+        setApiError("");
+      } catch (error: any) {
+        setApiError(error);
+      }
+    };
+    getForms();
+  }, []);
+
+  useEffect(() => {
+    if (searchInput.length > 1) {
+      const debounceTimer = setTimeout(async () => {
+        try {
+          const companyList = await fetchCompanies(searchInput);
+          setCompanies(companyList);
+          setApiError("");
+        } catch (error) {
+          if (error instanceof Error) {
+            setApiError(error.message);
+          } else {
+            setApiError("An unknown error occurred");
+          }
+        }
+      }, 300);
+
+      return () => clearTimeout(debounceTimer);
+    } else {
+      setCompanies([]);
+    }
+  }, [searchInput]);
+
+  const handleCompanyChange = (e:any) => {
+    !fetchingTable && setSearchInput(e.target.value);
+  };
+
+  const handleCompanySelect = (company: any) => {
+    if (
+      !selectedCompanies.some((c: { CIK: string }) => c.CIK === company.CIK)
+    ) {
+      setSelectedCompanies([...selectedCompanies, company]);
+    }
+    setSearchInput("");
+    setCompanies([]);
+  };
+
+  const removeCompany = (CIK: number) => {
+    setSelectedCompanies(
+      selectedCompanies.filter((company:any) => company.CIK !== CIK)
+    );
+  };
+
+  const fetchData = async (pageNumber = 0, isSearchBtn = false) => {
+    if (selectedCompanies.length === 0 || !selectedForm) return;
+
+    setFetchingTable(true);
+    pageNumber === 0 && isSearchBtn && setResetPagination(true);
+    try {
+      const response = await fetchSearchResults(
+        selectedCompanies,
+        selectedForm,
+        pageNumber,
+        pagedInfo.pageSize
+      );
+      setResults(response.SearchOutput || []);
+      setTotalRecords(response.TotalRecords || 0);
+      setPagedInfo((prev) => ({ ...prev, pageNumber }));
+      setApiError("");
+      pageNumber === 0 && isSearchBtn && setResetPagination(false);
+    } catch (error) {
+      if (error instanceof Error) {
+        setApiError(error.message);
+      } else {
+        setApiError("An unknown error occurred");
+      }
+    } finally {
+      setFetchingTable(false);
+    }
+  };
+
+  const onSearchButtonClick = async () => {
+    setIntialSearchPressed(true)
+    fetchData(0, true);
+  };
+
+  const onResetButtonClick = () => {
+    setSelectedCompanies([]);
+    setSelectedForm("");
+    setResults([]);
+    setTotalRecords(0);
+    setPagedInfo({
+      pageSize: allowedPageSizePerBatch,
+      pageNumber: 0,
+      loadMoreResults: false,
+    });
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="container">
+      <div className="dropdown-container">
+        <div className="multi-select-container">
+          <div className="selected-companies">
+            {selectedCompanies.map(
+              (company: { Name: string; CIK: number }) => (
+                <div key={company.CIK} className="pill" title={company.Name}>
+                  {company.Name.length > 18
+                    ? company.Name.slice(0, 18) + " ..."
+                    : company.Name}
+                  <a
+                    onClick={() => !fetchingTable && removeCompany(company.CIK)}
+                  >
+                    ×
+                  </a>
+                </div>
+              )
+            )}
+            <div className="input-wrapper">
+              <input
+                className="input-field"
+                placeholder="Search companies..."
+                value={searchInput}
+                onChange={handleCompanyChange}
+              />
+            </div>
+          </div>
+          {companies.length > 0 && (
+            <ul className="dropdown-list">
+              {companies.map(
+                (company: { Name: string; CIK: number }, index) => (
+                  <li key={index} onClick={() => handleCompanySelect(company)}>
+                    {`${company.Name} (${company.CIK})`}
+                  </li>
+                )
+              )}
+            </ul>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+
+        <div className="inlineStyle">
+          <select
+          
+            disabled={fetchingTable}
+            onChange={(e) => setSelectedForm(e.target.value)}
+            value={selectedForm}
+          >
+            <option  className="select-list" value="">Select Form</option>
+            {forms.map((form: { Id: string; Name: string }) => (
+              <option    key={form.Id} value={form.Id}>
+                {form.Name}
+              </option>
+            ))}
+          </select>
+          <button
+            className="searchBtn"
+            disabled={
+              fetchingTable || !selectedCompanies.length || !selectedForm.length
+            }
+            onClick={onSearchButtonClick}
+          >
+            {fetchingTable ? <span className="loader"></span> : "Search"}
+          </button>
+          {fetchingTable && (
+            <div className="info-div">
+              <strong className={fetchingTable ? "blinking" : ""}>
+                {"Fetching..."}
+              </strong>{" "}
+            </div>
+          )}
+        </div>
+        {/* <button
+            disabled={fetchingTable}
+            className="searchBtn resetBtn"
+            onClick={onResetButtonClick}
+          >
+            Reset
+          </button> */}
+      </div>
+      {apiError?.message && (
+        <div className="flex-row">
+          <div className="flex-col">
+            <p>{apiError?.message}</p>
+          </div>
+        </div>
+      )}
+
+      <PaginatedTable
+        results={results}
+        totalRecords={totalRecords}
+        fetchData={fetchData}
+        resetPagination={resetPagination}
+        selectedCompanies={selectedCompanies}
+        selectedForm={selectedForm}
+        fetchingTable={fetchingTable}
+        intialSearchPressed={intialSearchPressed}
+      />
+
+      <footer>
+        <p className="align-center">
+          Powered by{" "}
+          <img
+            alt="Logo"
+            className="logo"
+            src="https://www.intelligize.com/wp-content/uploads/2023/01/intelligize-logo.svg"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+        </p>
       </footer>
     </div>
   );
-}
+};
+
+export default AppWrapper;
