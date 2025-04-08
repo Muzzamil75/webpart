@@ -1,6 +1,6 @@
 
-import { token } from "./token.js";
-const HARDCODED_TOKEN = token;
+// import { token } from "./token.js";
+// const HARDCODED_TOKEN = token;
 export const allowedPageSizePerBatch = 10;
 
 const apiFetch = async (url, method, body = null) => {
