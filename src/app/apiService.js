@@ -9,7 +9,7 @@ const apiFetch = async (url, method, body = null) => {
       method,
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${HARDCODED_TOKEN}`,
+        // Authorization: `Bearer ${HARDCODED_TOKEN}`,
       },
       body: body ? JSON.stringify(body) : null,
     });

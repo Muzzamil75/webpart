@@ -21,17 +21,17 @@ const AppWrapper = () => {
 };
 
 const App = () => {
-  const [companies, setCompanies] = useState([]);
-  const [intialSearchPressed, setIntialSearchPressed] = useState(false);
-  const [selectedCompanies, setSelectedCompanies] = useState<any>([]);
-  const [selectedForm, setSelectedForm] = useState("");
+  const [forms, setForms] = useState([]);
   const [results, setResults] = useState([]);
+  const [companies, setCompanies] = useState([]);
   const [apiError, setApiError] = useState<any>("");
   const [searchInput, setSearchInput] = useState("");
-  const [fetchingTable, setFetchingTable] = useState(false);
-  const [forms, setForms] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [selectedForm, setSelectedForm] = useState("");
+  const [fetchingTable, setFetchingTable] = useState(false);
   const [resetPagination, setResetPagination] = useState(false);
+  const [selectedCompanies, setSelectedCompanies] = useState<any>([]);
+  const [intialSearchPressed, setIntialSearchPressed] = useState(false);
   const [pagedInfo, setPagedInfo] = useState({
     pageSize: allowedPageSizePerBatch,
     pageNumber: 0,
