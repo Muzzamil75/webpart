@@ -2,20 +2,23 @@
 
 import React, { useState, useEffect } from "react";
 import "./styles.css";
-import { fetchForms, fetchCompanies, fetchSearchResults, allowedPageSizePerBatch } from "./apiService";
-import {useConfig} from './useConfig'
+import {
+  fetchForms,
+  fetchCompanies,
+  fetchSearchResults,
+  allowedPageSizePerBatch,
+} from "./apiService";
+import { useConfig } from "./useConfig";
 import PaginatedTable from "./PaginatedTable";
 
-
-const AppWrapper = () =>{
-  const { config, isLoading,isError } = useConfig();
+const AppWrapper = () => {
+  const { config, isLoading, isError } = useConfig();
   if (isLoading) {
-  return <div className="launch-div blinking">Loading configs ...</div>; 
+    return <div className="launch-div blinking">Loading configs ...</div>;
   }
-  if(isError)
-    return <div className="launch-div">Error loading configs !</div>; 
-  else if(!isError && !isLoading) return <App />
-}
+  if (isError) return <div className="launch-div">Error loading configs !</div>;
+  else if (!isError && !isLoading) return <App />;
+};
 
 const App = () => {
   const [companies, setCompanies] = useState([]);
@@ -70,7 +73,7 @@ const App = () => {
     }
   }, [searchInput]);
 
-  const handleCompanyChange = (e:any) => {
+  const handleCompanyChange = (e: any) => {
     !fetchingTable && setSearchInput(e.target.value);
   };
 
@@ -86,7 +89,7 @@ const App = () => {
 
   const removeCompany = (CIK: number) => {
     setSelectedCompanies(
-      selectedCompanies.filter((company:any) => company.CIK !== CIK)
+      selectedCompanies.filter((company: any) => company.CIK !== CIK)
     );
   };
 
@@ -119,7 +122,7 @@ const App = () => {
   };
 
   const onSearchButtonClick = async () => {
-    setIntialSearchPressed(true)
+    setIntialSearchPressed(true);
     fetchData(0, true);
   };
 
@@ -140,20 +143,16 @@ const App = () => {
       <div className="dropdown-container">
         <div className="multi-select-container">
           <div className="selected-companies">
-            {selectedCompanies.map(
-              (company: { Name: string; CIK: number }) => (
-                <div key={company.CIK} className="pill" title={company.Name}>
-                  {company.Name.length > 18
-                    ? company.Name.slice(0, 18) + " ..."
-                    : company.Name}
-                  <a
-                    onClick={() => !fetchingTable && removeCompany(company.CIK)}
-                  >
-                    ×
-                  </a>
-                </div>
-              )
-            )}
+            {selectedCompanies.map((company: { Name: string; CIK: number }) => (
+              <div key={company.CIK} className="pill" title={company.Name}>
+                {company.Name.length > 18
+                  ? company.Name.slice(0, 18) + " ..."
+                  : company.Name}
+                <a onClick={() => !fetchingTable && removeCompany(company.CIK)}>
+                  ×
+                </a>
+              </div>
+            ))}
             <div className="input-wrapper">
               <input
                 className="input-field"
@@ -178,14 +177,15 @@ const App = () => {
 
         <div className="inlineStyle">
           <select
-          
             disabled={fetchingTable}
             onChange={(e) => setSelectedForm(e.target.value)}
             value={selectedForm}
           >
-            <option  className="select-list" value="">Select Form</option>
+            <option className="select-list" value="">
+              Select Form
+            </option>
             {forms.map((form: { Id: string; Name: string }) => (
-              <option    key={form.Id} value={form.Id}>
+              <option key={form.Id} value={form.Id}>
                 {form.Name}
               </option>
             ))}

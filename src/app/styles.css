@@ -9,6 +9,7 @@ margin-top: 20px;
 
 .container {
   padding: 20px;
+  width: 65%;
 }
 
 h1 {
@@ -190,7 +191,7 @@ h1 {
 }
 
 .results-table {
-  width: 70%;
+  width: 100%;
   border-collapse: collapse;
 }
 
