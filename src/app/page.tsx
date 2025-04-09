@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./styles.css";
 import {
   fetchForms,
@@ -21,6 +21,7 @@ const AppWrapper = () => {
 };
 
 const App = () => {
+  const dropdownRef = useRef(null);
   const [forms, setForms] = useState([]);
   const [results, setResults] = useState([]);
   const [companies, setCompanies] = useState([]);
@@ -138,13 +139,30 @@ const App = () => {
     });
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !(dropdownRef.current as HTMLElement).contains(event.target as Node)
+      ) {
+        setSearchInput('')
+        setCompanies([]);
+      }
+    };
+  
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
     <div className="container">
       <div className="dropdown-container">
-        <div className="multi-select-container">
+        <div className="multi-select-container"  ref={dropdownRef}>
           <div className="selected-companies">
             {selectedCompanies.map((company: { Name: string; CIK: number }) => (
-              <div key={company.CIK} className="pill" title={company.Name}>
+              <div key={company.CIK} className="pill" title={`${company.Name}   ${company.CIK}`}>
                 {company.Name.length > 18
                   ? company.Name.slice(0, 18) + " ..."
                   : company.Name}
