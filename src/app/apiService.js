@@ -1,6 +1,3 @@
-
-// import { token } from "./token.js";
-// const HARDCODED_TOKEN = token;
 export const allowedPageSizePerBatch = 10;
 
 const apiFetch = async (url, method, body = null) => {
@@ -9,13 +6,18 @@ const apiFetch = async (url, method, body = null) => {
       method,
       headers: {
         "Content-Type": "application/json",
-        // Authorization: `Bearer ${HARDCODED_TOKEN}`,
       },
       body: body ? JSON.stringify(body) : null,
     });
 
-    if (!response.ok)
-      throw new Error(`HTTP Error: ${response.status} of ${response.url}`);
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => null);
+      const error = new Error(`HTTP Error: ${response.statusText}`);
+      error.status = response.status;
+      error.statusText = response.statusText;
+      error.body = errorBody;
+      throw error;
+    }
     const data = await response.json();
     return data || [];
   } catch (error) {
@@ -24,7 +26,9 @@ const apiFetch = async (url, method, body = null) => {
 };
 
 export const fetchForms = () =>
-  apiFetch(window.appConfigs?.FORMS_URL, "GET").then((data) => data.Forms || []);
+  apiFetch(window.appConfigs?.FORMS_URL, "GET").then(
+    (data) => data.Forms || []
+  );
 
 export const fetchCompanies = (value) => {
   const payload = {
@@ -38,7 +42,10 @@ export const fetchCompanies = (value) => {
       applicationKey: "ad",
       skipCompanyList: true,
     },
-    PagedInfo: { PageSize: window.appConfigs?.companyPageSize || 10000, PageNumber: 1 },
+    PagedInfo: {
+      PageSize: window.appConfigs?.companyPageSize || 10000,
+      PageNumber: 1,
+    },
     returnTotalRecords: false,
     oneCharacterLogic: true,
   };
@@ -90,10 +97,12 @@ export const fetchSearchResults = (
     },
   };
 
-  return apiFetch(window.appConfigs?.SEARCH_URL, "POST", payload).then((data) => ({
-    SearchOutput: data.SearchOutput || [],
-    TotalRecords: data.TotalRecords || 0,
-  }));
+  return apiFetch(window.appConfigs?.SEARCH_URL, "POST", payload).then(
+    (data) => ({
+      SearchOutput: data.SearchOutput || [],
+      TotalRecords: data.TotalRecords || 0,
+    })
+  );
 };
 
 export const downloadFile = async ({
@@ -131,7 +140,11 @@ export const downloadFile = async ({
       },
     };
 
-    const data = await apiFetch(window.appConfigs?.DOWNLOAD_URL, "POST", payload);
+    const data = await apiFetch(
+      window.appConfigs?.DOWNLOAD_URL,
+      "POST",
+      payload
+    );
 
     if (data && data.URL) {
       window.open(data.URL, "_blank");

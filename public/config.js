@@ -3,5 +3,5 @@ var appConfigs = {
   "FORMS_URL": "https://ddc4-sf.intelligize.net/build-039/api/Form?appkey=sf",
   "SEARCH_URL": "https://ddc4-sf.intelligize.net/build-039/api/searches",
   "DOWNLOAD_URL": "https://ddc4-sf.intelligize.net/build-039/api/DocumentView/Downloads",
-  "companyPageSize" : 10000
+  "companyPageSize" : 5000
 }

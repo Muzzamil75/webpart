@@ -25,7 +25,7 @@ const App = () => {
   const [forms, setForms] = useState([]);
   const [results, setResults] = useState([]);
   const [companies, setCompanies] = useState([]);
-  const [apiError, setApiError] = useState<any>("");
+  const [apiError, setApiError] = useState<any>({});
   const [searchInput, setSearchInput] = useState("");
   const [totalRecords, setTotalRecords] = useState(0);
   const [selectedForm, setSelectedForm] = useState("");
@@ -44,24 +44,34 @@ const App = () => {
       try {
         const formsData = await fetchForms();
         setForms(formsData);
-        setApiError("");
+        setApiError({});
       } catch (error: any) {
-        setApiError(error);
+        apiMessageHandler(error);
       }
     };
     getForms();
   }, []);
 
+  const apiMessageHandler = (error: any) => {
+    if (error.status === 401) {
+      setApiError({ message: "Unauthorized access", status: 401 });
+    } else {
+      setApiError({
+        message: error.message || "An unknown error occurred",
+        status: error.status || "",
+      });
+    }
+  };
   useEffect(() => {
     if (searchInput.length > 1) {
       const debounceTimer = setTimeout(async () => {
         try {
           const companyList = await fetchCompanies(searchInput);
           setCompanies(companyList);
-          setApiError("");
+          setApiError({});
         } catch (error) {
           if (error instanceof Error) {
-            setApiError(error.message);
+            apiMessageHandler(error);
           } else {
             setApiError("An unknown error occurred");
           }
@@ -109,11 +119,11 @@ const App = () => {
       setResults(response.SearchOutput || []);
       setTotalRecords(response.TotalRecords || 0);
       setPagedInfo((prev) => ({ ...prev, pageNumber }));
-      setApiError("");
+      setApiError({});
       pageNumber === 0 && isSearchBtn && setResetPagination(false);
     } catch (error) {
       if (error instanceof Error) {
-        setApiError(error.message);
+        apiMessageHandler(error);
       } else {
         setApiError("An unknown error occurred");
       }
@@ -145,11 +155,11 @@ const App = () => {
         dropdownRef.current &&
         !(dropdownRef.current as HTMLElement).contains(event.target as Node)
       ) {
-        setSearchInput('')
+        setSearchInput("");
         setCompanies([]);
       }
     };
-  
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -159,10 +169,14 @@ const App = () => {
   return (
     <div className="container">
       <div className="dropdown-container">
-        <div className="multi-select-container"  ref={dropdownRef}>
+        <div className="multi-select-container" ref={dropdownRef}>
           <div className="selected-companies">
             {selectedCompanies.map((company: { Name: string; CIK: number }) => (
-              <div key={company.CIK} className="pill" title={`${company.Name}   ${company.CIK}`}>
+              <div
+                key={company.CIK}
+                className="pill"
+                title={`${company.Name}   ${company.CIK}`}
+              >
                 {company.Name.length > 18
                   ? company.Name.slice(0, 18) + " ..."
                   : company.Name}
@@ -236,21 +250,25 @@ const App = () => {
       {apiError?.message && (
         <div className="flex-row">
           <div className="flex-col">
-            <p>{apiError?.message}</p>
+            <p className="error-text">
+              {apiError?.message}
+            </p>
           </div>
         </div>
       )}
 
-      <PaginatedTable
-        results={results}
-        totalRecords={totalRecords}
-        fetchData={fetchData}
-        resetPagination={resetPagination}
-        selectedCompanies={selectedCompanies}
-        selectedForm={selectedForm}
-        fetchingTable={fetchingTable}
-        intialSearchPressed={intialSearchPressed}
-      />
+      {!apiError.message && (
+        <PaginatedTable
+          results={results}
+          totalRecords={totalRecords}
+          fetchData={fetchData}
+          resetPagination={resetPagination}
+          selectedCompanies={selectedCompanies}
+          selectedForm={selectedForm}
+          fetchingTable={fetchingTable}
+          intialSearchPressed={intialSearchPressed}
+        />
+      )}
 
       <footer>
         <p className="align-center">
