@@ -22,6 +22,7 @@ const AppWrapper = () => {
 
 const App = () => {
   const dropdownRef = useRef(null);
+  const requestIdRef = useRef(0);
   const [forms, setForms] = useState([]);
   const [results, setResults] = useState([]);
   const [companies, setCompanies] = useState([]);
@@ -62,13 +63,17 @@ const App = () => {
       });
     }
   };
+
   useEffect(() => {
     if (searchInput.length > 1) {
+      const currentRequestId = ++requestIdRef.current;
       const debounceTimer = setTimeout(async () => {
         try {
           const companyList = await fetchCompanies(searchInput);
-          setCompanies(companyList);
-          setApiError({});
+          if (currentRequestId === requestIdRef.current) {
+            setCompanies(companyList);
+            setApiError({});
+          }
         } catch (error) {
           if (error instanceof Error) {
             apiMessageHandler(error);
@@ -77,7 +82,7 @@ const App = () => {
           }
         }
       }, 300);
-
+  
       return () => clearTimeout(debounceTimer);
     } else {
       setCompanies([]);
