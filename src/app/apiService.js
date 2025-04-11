@@ -12,7 +12,7 @@ const apiFetch = async (url, method, body = null) => {
 
     if (!response.ok) {
       const errorBody = await response.json().catch(() => null);
-      const error = new Error(`HTTP Error: ${response.statusText}`);
+      const error = new Error(`HTTP Error: ${response.status}`);
       error.status = response.status;
       error.statusText = response.statusText;
       error.body = errorBody;
@@ -26,9 +26,10 @@ const apiFetch = async (url, method, body = null) => {
 };
 
 export const fetchForms = () =>
-  apiFetch(window.appConfigs?.FORMS_URL, "GET").then(
-    (data) => data.Forms || []
-  );
+  apiFetch(window.appConfigs?.FORMS_URL, "GET").then((data) => ({
+    forms: data.Forms || [],
+    formsGroups: data.FormsGroups,
+  }));
 
 export const fetchCompanies = (value) => {
   const payload = {
@@ -61,8 +62,8 @@ export const fetchSearchResults = (
   pageNumber = 0,
   pageSize = 100
 ) => {
-  if (!selectedCompanies || !selectedForm)
-    return Promise.resolve({ SearchOutput: [], TotalRecords: 0 });
+  const formId = selectedForm?.type === "individual" ? [selectedForm.Id] : [];
+  const groupId = selectedForm?.type === "group" ? [selectedForm.Id] : [];
 
   const payload = {
     app: "sf",
@@ -79,13 +80,14 @@ export const fetchSearchResults = (
       },
       amendmentFilings: "INC",
       ixbrl: "INC",
-      forms: {
-        ids: [selectedForm],
-        groupsIds: [],
-        SearchLogic: "OR",
-      },
       sectionType: [],
       includeExhibits: true,
+      boilerPlate: {
+        status: "INC",
+        type: [],
+        statusLabel: "Include",
+        typeLabel: "All",
+      },
     },
     sortInfo: { fieldName: "FilingDate", order: "DESC" },
     pagedInfo: { pageSize, pageNumber, loadMoreResults: false },
@@ -96,6 +98,14 @@ export const fetchSearchResults = (
       shouldIncludeCrossReferences: false,
     },
   };
+
+  if (formId.length || groupId.length) {
+    payload.filters.forms = {
+      ids: formId,
+      groupsIds: groupId,
+      SearchLogic: "OR",
+    };
+  }
 
   return apiFetch(window.appConfigs?.SEARCH_URL, "POST", payload).then(
     (data) => ({

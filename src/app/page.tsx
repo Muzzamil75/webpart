@@ -29,7 +29,7 @@ const App = () => {
   const [apiError, setApiError] = useState<any>({});
   const [searchInput, setSearchInput] = useState("");
   const [totalRecords, setTotalRecords] = useState(0);
-  const [selectedForm, setSelectedForm] = useState("");
+  const [selectedForm, setSelectedForm] = useState({});
   const [fetchingTable, setFetchingTable] = useState(false);
   const [resetPagination, setResetPagination] = useState(false);
   const [selectedCompanies, setSelectedCompanies] = useState<any>([]);
@@ -44,7 +44,16 @@ const App = () => {
     const getForms = async () => {
       try {
         const formsData = await fetchForms();
-        setForms(formsData);
+        const groupForms = formsData.formsGroups.map((f) => ({
+          ...f,
+          type: "group",
+        }));
+
+        const otherForms = formsData.forms.map((f) => ({
+          ...f,
+          type: "individual",
+        }));
+        setForms([...groupForms, ...otherForms]);
         setApiError({});
       } catch (error: any) {
         apiMessageHandler(error);
@@ -82,7 +91,6 @@ const App = () => {
           }
         }
       }, 300);
-  
       return () => clearTimeout(debounceTimer);
     } else {
       setCompanies([]);
@@ -110,8 +118,6 @@ const App = () => {
   };
 
   const fetchData = async (pageNumber = 0, isSearchBtn = false) => {
-    if (selectedCompanies.length === 0 || !selectedForm) return;
-
     setFetchingTable(true);
     pageNumber === 0 && isSearchBtn && setResetPagination(true);
     try {
@@ -203,7 +209,15 @@ const App = () => {
             <ul className="dropdown-list">
               {companies.map(
                 (company: { Name: string; CIK: number }, index) => (
-                  <li key={index} onClick={() => handleCompanySelect(company)}>
+                  <li
+                    className={
+                      selectedCompanies?.some((c) => c.CIK === company.CIK)
+                        ? "selectedComp"
+                        : ""
+                    }
+                    key={index}
+                    onClick={() => handleCompanySelect(company)}
+                  >
                     {`${company.Name} (${company.CIK})`}
                   </li>
                 )
@@ -215,23 +229,37 @@ const App = () => {
         <div className="inlineStyle">
           <select
             disabled={fetchingTable}
-            onChange={(e) => setSelectedForm(e.target.value)}
-            value={selectedForm}
+            onChange={(e) => {
+              const [type, id] = e.target.value.split("-");
+              const selected = forms.find(
+                (form: any) => form.Id.toString() === id && form.type === type
+              );
+              setSelectedForm(selected || {});
+            }}
+            value={
+              selectedForm?.type && selectedForm?.Id
+                ? `${selectedForm.type}-${selectedForm.Id}`
+                : ""
+            }
           >
             <option className="select-list" value="">
-              Select Form
+              All Forms
             </option>
-            {forms.map((form: { Id: string; Name: string }) => (
-              <option key={form.Id} value={form.Id}>
-                {form.Name}
-              </option>
-            ))}
+            {forms.map(
+              (form: { Id: string; type: string; Name: string }, _index) => (
+                <option
+                  // className={selectedForm == form.Id ? "selectedComp" : ""}
+                  key={_index}
+                  value={`${form.type}-${form.Id}`}
+                >
+                  {form.Name}
+                </option>
+              )
+            )}
           </select>
           <button
             className="searchBtn"
-            disabled={
-              fetchingTable || !selectedCompanies.length || !selectedForm.length
-            }
+            disabled={fetchingTable}
             onClick={onSearchButtonClick}
           >
             {fetchingTable ? <span className="loader"></span> : "Search"}
@@ -255,9 +283,7 @@ const App = () => {
       {apiError?.message && (
         <div className="flex-row">
           <div className="flex-col">
-            <p className="error-text">
-              {apiError?.message}
-            </p>
+            <p className="error-text">{apiError?.message}</p>
           </div>
         </div>
       )}

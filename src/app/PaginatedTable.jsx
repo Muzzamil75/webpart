@@ -12,7 +12,7 @@ const PaginatedTable = ({
   selectedForm,
   fetchingTable,
   resetPagination,
-  intialSearchPressed
+  intialSearchPressed,
 }) => {
   const [pageNumber, setPageNumber] = useState(0);
   const [paginationStart, setPaginationStart] = useState(0);
@@ -164,9 +164,6 @@ const PaginatedTable = ({
                       className={`page-button ${
                         pageNumber === paginationStart + i ? "active" : ""
                       }`}
-                      disabled={
-                        !selectedForm?.length || !selectedCompanies?.length
-                      }
                       onClick={() => handlePageChange(paginationStart + i)}
                     >
                       {paginationStart + i + 1}
@@ -183,7 +180,7 @@ const PaginatedTable = ({
               </div>
             )}
           </>
-        ) : selectedCompanies.length && intialSearchPressed && selectedForm.length && !results.length && !fetchingTable ? (
+        ) : intialSearchPressed && !results.length && !fetchingTable ? (
           <p className="align-center">No results found</p>
         ) : null}
       </div>
