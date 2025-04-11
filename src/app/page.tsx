@@ -23,13 +23,13 @@ const AppWrapper = () => {
 const App = () => {
   const dropdownRef = useRef(null);
   const requestIdRef = useRef(0);
-  const [forms, setForms] = useState([]);
+  const [forms, setForms] = useState<any>([]);
   const [results, setResults] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [apiError, setApiError] = useState<any>({});
   const [searchInput, setSearchInput] = useState("");
   const [totalRecords, setTotalRecords] = useState(0);
-  const [selectedForm, setSelectedForm] = useState({});
+  const [selectedForm, setSelectedForm] = useState<{Id?:string,type?:string}>({});
   const [fetchingTable, setFetchingTable] = useState(false);
   const [resetPagination, setResetPagination] = useState(false);
   const [selectedCompanies, setSelectedCompanies] = useState<any>([]);
@@ -44,12 +44,12 @@ const App = () => {
     const getForms = async () => {
       try {
         const formsData = await fetchForms();
-        const groupForms = formsData.formsGroups.map((f) => ({
+        const groupForms = formsData.formsGroups.map((f:any) => ({
           ...f,
           type: "group",
         }));
 
-        const otherForms = formsData.forms.map((f) => ({
+        const otherForms = formsData.forms.map((f:any) => ({
           ...f,
           type: "individual",
         }));
@@ -148,17 +148,6 @@ const App = () => {
     fetchData(0, true);
   };
 
-  const onResetButtonClick = () => {
-    setSelectedCompanies([]);
-    setSelectedForm("");
-    setResults([]);
-    setTotalRecords(0);
-    setPagedInfo({
-      pageSize: allowedPageSizePerBatch,
-      pageNumber: 0,
-      loadMoreResults: false,
-    });
-  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -211,7 +200,7 @@ const App = () => {
                 (company: { Name: string; CIK: number }, index) => (
                   <li
                     className={
-                      selectedCompanies?.some((c) => c.CIK === company.CIK)
+                      selectedCompanies?.some((c:{CIK:number}) => c.CIK === company.CIK)
                         ? "selectedComp"
                         : ""
                     }
@@ -246,7 +235,7 @@ const App = () => {
               All Forms
             </option>
             {forms.map(
-              (form: { Id: string; type: string; Name: string }, _index) => (
+              (form: { Id: string; type: string; Name: string }, _index:any) => (
                 <option
                   // className={selectedForm == form.Id ? "selectedComp" : ""}
                   key={_index}
