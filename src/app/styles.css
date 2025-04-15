@@ -137,6 +137,16 @@ h1 {
   color: #fff;
 }
 
+.dropdown-item-flex {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px; /* same as li */
+}
+.cik-right {
+  margin-left: 10px;
+  flex-shrink: 0;
+}
+
 option.selectedComp {
   background-color: #4d6ce8;
   font-weight: bold;

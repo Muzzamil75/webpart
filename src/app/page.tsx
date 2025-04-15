@@ -29,7 +29,10 @@ const App = () => {
   const [apiError, setApiError] = useState<any>({});
   const [searchInput, setSearchInput] = useState("");
   const [totalRecords, setTotalRecords] = useState(0);
-  const [selectedForm, setSelectedForm] = useState<{Id?:string,type?:string}>({});
+  const [selectedForm, setSelectedForm] = useState<{
+    Id?: string;
+    type?: string;
+  }>({});
   const [fetchingTable, setFetchingTable] = useState(false);
   const [resetPagination, setResetPagination] = useState(false);
   const [selectedCompanies, setSelectedCompanies] = useState<any>([]);
@@ -44,12 +47,12 @@ const App = () => {
     const getForms = async () => {
       try {
         const formsData = await fetchForms();
-        const groupForms = formsData.formsGroups.map((f:any) => ({
+        const groupForms = formsData.formsGroups.map((f: any) => ({
           ...f,
           type: "group",
         }));
 
-        const otherForms = formsData.forms.map((f:any) => ({
+        const otherForms = formsData.forms.map((f: any) => ({
           ...f,
           type: "individual",
         }));
@@ -148,7 +151,6 @@ const App = () => {
     fetchData(0, true);
   };
 
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -197,17 +199,28 @@ const App = () => {
           {companies.length > 0 && (
             <ul className="dropdown-list">
               {companies.map(
-                (company: { Name: string; CIK: number }, index) => (
+                (
+                  company: { Name: string; CIK: number; TickerCode: string },
+                  index
+                ) => (
                   <li
                     className={
-                      selectedCompanies?.some((c:{CIK:number}) => c.CIK === company.CIK)
+                      selectedCompanies?.some(
+                        (c: { CIK: number }) => c.CIK === company.CIK
+                      )
                         ? "selectedComp"
                         : ""
                     }
                     key={index}
                     onClick={() => handleCompanySelect(company)}
                   >
-                    {`${company.Name} (${company.CIK})`}
+                    <div className="dropdown-item-flex">
+                      <span>
+                        {company.Name}
+                        {company.TickerCode ? ` (${company.TickerCode})` : ""}
+                      </span>
+                      <span className="cik-right">{company.CIK}</span>
+                    </div>
                   </li>
                 )
               )}
@@ -235,7 +248,10 @@ const App = () => {
               All Forms
             </option>
             {forms.map(
-              (form: { Id: string; type: string; Name: string }, _index:any) => (
+              (
+                form: { Id: string; type: string; Name: string },
+                _index: any
+              ) => (
                 <option
                   // className={selectedForm == form.Id ? "selectedComp" : ""}
                   key={_index}
